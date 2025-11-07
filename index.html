@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KorexTV - المسلسلات الكورية</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .video-player-container {
+            background: #000;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #main-video-player {
+            width: 100%;
+            height: 250px;
+            display: block;
+        }
+        
+        .video-controls {
+            display: flex;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: rgba(0,0,0,0.8);
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .video-controls button, .video-controls select {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .video-controls button:hover {
+            background: var(--primary-color, #e50914);
+        }
+        
+        .episode-parts {
+            margin: 1.5rem 0;
+        }
+        
+        .parts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+        
+        .part-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .part-btn:hover, .part-btn.active {
+            background: var(--primary-color, #e50914);
+            transform: translateY(-2px);
+        }
+        
+        .series-details {
+            background: #1a1a1a;
+            padding: 1.2rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+        }
+        
+        .series-tags {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            background: #333;
+            color: #ccc;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+        
+        .episode-meta {
+            display: flex;
+            gap: 1rem;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+        
+        .comments-section {
+            background: #1a1a1a;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin: 1.5rem 0;
+        }
+        
+        .comment-form {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .comment-input {
+            flex: 1;
+            background: #2a2a2a;
+            border: 2px solid #333;
+            border-radius: 25px;
+            padding: 12px 20px;
+            color: white;
+        }
+        
+        .comments-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .comment-item {
+            background: #2a2a2a;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--primary-color, #e50914);
+        }
+        
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .comment-user {
+            font-weight: bold;
+            color: var(--primary-color, #e50914);
+        }
+        
+        .comment-time {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- الهيدر -->
+    <header class="header">
+        <div class="user-info">
+            <span class="user-points" id="user-points">100</span>
+            <span id="user-name">مستخدم</span>
+        </div>
+        <h1>KorexTV 🎬</h1>
+        <p>مسلسلات كورية في مقاطع قصيرة</p>
+        <div class="notification-bell" onclick="toggleNotifications()">
+            🔔 <span class="notification-count" id="notification-count">0</span>
+        </div>
+    </header>
+    
+    <!-- المحتوى الرئيسي -->
+    <div class="main-content">
+        <!-- الصفحة الرئيسية -->
+        <div id="home-page" class="page active">
+            <div class="search-container">
+                <input type="text" class="search-input" id="search-input" placeholder="ابحث عن مسلسل..." onkeyup="app.searchSeries()">
+                <div class="search-icon">🔍</div>
+            </div>
+            
+            <div class="categories">
+                <button class="category-btn active" onclick="app.filterSeries('all')">الكل</button>
+                <button class="category-btn" onclick="app.filterSeries('popular')">🔥 الأكثر مشاهدة</button>
+                <button class="category-btn" onclick="app.filterSeries('new')">🆕 الجديد</button>
+                <button class="category-btn" onclick="app.filterSeries('romance')">💖 الرومانسية</button>
+                <button class="category-btn" onclick="app.filterSeries('action')">💥 الأكشن</button>
+            </div>
+            
+            <div class="ad-banner">
+                🎪 إعلان: شاهد أحدث المسلسلات الكورية مجاناً!
+            </div>
+            
+            <div class="series-grid" id="series-grid">
+                <!-- المسلسلات تظهر هنا -->
+            </div>
+        </div>
+        
+        <!-- صفحة المشاهدة -->
+        <div id="video-page" class="page">
+            <div class="video-header">
+                <button onclick="showPage('home-page')" class="back-btn">←</button>
+                <h3 id="video-title">الحب الكوري - الحلقة 1</h3>
+                <button id="favorite-btn" class="fav-btn">♥</button>
+            </div>
+            
+            <!-- مشغل الفيديو الحقيقي -->
+            <div class="video-player-container">
+                <video id="main-video-player" controls controlsList="nodownload">
+                    <source src="" type="video/mp4">
+                    المتصفح لا يدعم تشغيل الفيديو.
+                </video>
+                
+                <div class="video-controls">
+                    <button onclick="videoPlayer.togglePlay()" id="play-btn">⏸️</button>
+                    <button onclick="videoPlayer.skipBackward()">⏪ 10s</button>
+                    <button onclick="videoPlayer.skipForward()">⏩ 10s</button>
+                    <select id="quality-selector" onchange="videoPlayer.changeQuality(this.value)">
+                        <option value="auto">جودة تلقائية</option>
+                        <option value="1080">1080p</option>
+                        <option value="720">720p</option>
+                    </select>
+                    <button onclick="videoPlayer.toggleFullscreen()">⛶</button>
+                </div>
+            </div>
+            
+            <!-- معلومات الحلقة -->
+            <div class="episode-info">
+                <div class="episode-header">
+                    <strong id="current-episode">الحلقة 1 - لقاء الصدفة</strong>
+                    <div class="episode-meta">
+                        <span>⏱️ 45:00</span>
+                        <span>👁️ 12.5K</span>
+                        <span>⭐ 4.8</span>
+                    </div>
+                </div>
+                
+                <!-- أجزاء الحلقة -->
+                <div class="episode-parts">
+                    <h4>🕒 أجزاء الحلقة:</h4>
+                    <div class="parts-grid">
+                        <button class="part-btn active" onclick="videoPlayer.playVideoPart(1)">الجزء 1 (15:00)</button>
+                        <button class="part-btn" onclick="videoPlayer.playVideoPart(2)">الجزء 2 (15:00)</button>
+                        <button class="part-btn" onclick="videoPlayer.playVideoPart(3)">الجزء 3 (15:00)</button>
+                    </div>
+                </div>
+                
+                <!-- تفاصيل المسلسل -->
+                <div class="series-details">
+                    <h4>📖 عن المسلسل:</h4>
+                    <p id="series-description">قصة حب رومانسية بين طالبين في الجامعة يلتقيان بمحض الصدفة...</p>
+                    <div class="series-tags">
+                        <span class="tag">💖 رومانسي</span>
+                        <span class="tag">🎭 دراما</span>
+                        <span class="tag">🏫 جامعة</span>
+                    </div>
+                </div>
+                
+                <!-- نظام التعليقات -->
+                <div class="comments-section">
+                    <h4>💬 التعليقات والتقييمات</h4>
+                    <div class="comment-form">
+                        <input type="text" class="comment-input" id="comment-input" placeholder="اكتب تعليقك...">
+                        <button onclick="app.addComment()" class="btn">إرسال</button>
+                    </div>
+                    <div class="comments-list" id="comments-list">
+                        <!-- التعليقات تظهر هنا -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- صفحات أخرى -->
+        <div id="profile-page" class="page">
+            <!-- محتوى الملف الشخصي -->
+        </div>
+    </div>
+    
+    <!-- الشريط السفلي -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="showPage('home-page')">
+            <div class="nav-icon">🏠</div>
+            <div>الرئيسية</div>
+        </div>
+        <div class="nav-item" onclick="showPage('video-page')">
+            <div class="nav-icon">🎬</div>
+            <div>المشاهدة</div>
+        </div>
+        <div class="nav-item" onclick="showPage('profile-page')">
+            <div class="nav-icon">👤</div>
+            <div>الملف</div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // نظام التطبيق الرئيسي
+        class KorexTVApp {
+            constructor() {
+                this.currentUser = JSON.parse(localStorage.getItem('korextv_currentUser') || 'null');
+                this.series = JSON.parse(localStorage.getItem('korextv_series') || this.getDefaultSeries());
+                this.comments = JSON.parse(localStorage.getItem('korextv_comments') || []);
+                this.currentSeries = null;
+                
+                this.init();
+            }
+            
+            getDefaultSeries() {
+                return [
+                    {
+                        id: 1,
+                        title: "الحب الكوري",
+                        emoji: "💖",
+                        rating: 4.5,
+                        episodes: 16,
+                        year: 2024,
+                        color: "#ff6b6b",
+                        category: "romance",
+                        views: 12500,
+                        description: "قصة حب رومانسية بين طالبين في الجامعة",
+                        duration: "45:00",
+                        isNew: true,
+                        videoUrl: "https://example.com/video1.mp4"
+                    },
+                    {
+                        id: 2,
+                        title: "الورثة", 
+                        emoji: "👑",
+                        rating: 4.7,
+                        episodes: 20,
+                        year: 2023,
+                        color: "#74b9ff",
+                        category: "drama",
+                        views: 18700,
+                        description: "دراما عن ورثة شركات كبيرة وتحدياتهم",
+                        duration: "50:00",
+                        isNew: false,
+                        videoUrl: "https://example.com/video2.mp4"
+                    }
+                ];
+            }
+            
+            init() {
+                if (!this.currentUser) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                this.loadUserInfo();
+                this.loadSeries();
+                this.loadComments();
+            }
+            
+            loadUserInfo() {
+                document.getElementById('user-name').textContent = this.currentUser.name;
+                document.getElementById('user-points').textContent = this.currentUser.points;
+            }
+            
+            loadSeries(filter = 'all') {
+                let filteredSeries = this.series;
+                
+                if (filter === 'popular') {
+                    filteredSeries = [...this.series].sort((a, b) => b.views - a.views);
+                } else if (filter === 'new') {
+                    filteredSeries = this.series.filter(series => series.isNew);
+                } else if (filter !== 'all') {
+                    filteredSeries = this.series.filter(series => series.category === filter);
+                }
+                
+                const grid = document.getElementById('series-grid');
+                grid.innerHTML = filteredSeries.map(series => `
+                    <div class="series-card" onclick="app.playSeries(${series.id})">
+                        <div class="series-image" style="background: linear-gradient(135deg, ${series.color}, #333)">
+                            ${series.emoji}
+                            ${series.isNew ? '<div class="episode-badge">🆕</div>' : ''}
+                            <div class="episode-badge" style="top: 40px; background: #333;">${series.episodes} حلقة</div>
+                        </div>
+                        <div class="series-info">
+                            <h4 class="series-title">${series.title}</h4>
+                            <div class="series-rating">
+                                ${'★'.repeat(Math.floor(series.rating))}${'☆'.repeat(5-Math.floor(series.rating))} 
+                                <span>${series.rating}</span>
+                            </div>
+                            <div class="series-meta">
+                                <span>${series.year}</span>
+                                <span>👁️ ${series.views.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            playSeries(seriesId) {
+                const series = this.series.find(s => s.id === seriesId);
+                if (series) {
+                    this.currentSeries = series;
+                    
+                    document.getElementById('video-title').textContent = series.title + ' - الحلقة 1';
+                    document.getElementById('current-episode').textContent = 'الحلقة 1 - ' + series.description;
+                    document.getElementById('series-description').textContent = series.description;
+                    
+                    // زيادة المشاهدات
+                    series.views++;
+                    this.saveSeries();
+                    
+                    showPage('video-page');
+                    
+                    // تحميل التعليقات
+                    this.loadComments(seriesId);
+                }
+            }
+            
+            filterSeries(filter) {
+                document.querySelectorAll('.category-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+                
+                this.loadSeries(filter);
+            }
+            
+            searchSeries() {
+                const searchTerm = document.getElementById('search-input').value.toLowerCase();
+                const filteredSeries = this.series.filter(series => 
+                    series.title.toLowerCase().includes(searchTerm) ||
+                    series.description.toLowerCase().includes(searchTerm)
+                );
+                
+                const grid = document.getElementById('series-grid');
+                grid.innerHTML = filteredSeries.map(series => `
+                    <div class="series-card" onclick="app.playSeries(${series.id})">
+                        <div class="series-image" style="background: linear-gradient(135deg, ${series.color}, #333)">
+                            ${series.emoji}
+                        </div>
+                        <div class="series-info">
+                            <h4 class="series-title">${series.title}</h4>
+                            <div class="series-rating">${'★'.repeat(Math.floor(series.rating))}${'☆'.repeat(5-Math.floor(series.rating))}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            loadComments(seriesId = null) {
+                let filteredComments = this.comments;
+                if (seriesId) {
+                    filteredComments = this.comments.filter(comment => comment.seriesId === seriesId);
+                }
+                
+                const container = document.getElementById('comments-list');
+                if (container) {
+                    container.innerHTML = filteredComments.map(comment => `
+                        <div class="comment-item">
+                            <div class="comment-header">
+                                <span class="comment-user">${comment.userName}</span>
+                                <span class="comment-time">${new Date(comment.timestamp).toLocaleDateString('ar-EG')}</span>
+                            </div>
+                            <div class="comment-text">${comment.text}</div>
+                            <div class="comment-rating">${'⭐'.repeat(comment.rating)}</div>
+                        </div>
+                    `).join('');
+                }
+            }
+            
+            addComment() {
+                const commentInput = document.getElementById('comment-input');
+                const text = commentInput.value.trim();
+                
+                if (!text || !this.currentSeries) return;
+                
+                const comment = {
+                    id: Date.now(),
+                    seriesId: this.currentSeries.id,
+                    userId: this.currentUser.id,
+                    userName: this.currentUser.name,
+                    text: text,
+                    rating: 5, // يمكن إضافة نظام تقييم
+                    timestamp: new Date().toISOString()
+                };
+                
+                this.comments.push(comment);
+                this.saveComments();
+                this.loadComments(this.currentSeries.id);
+                
+                commentInput.value = '';
+            }
+            
+            saveSeries() {
+                localStorage.setItem('korextv_series', JSON.stringify(this.series));
+            }
+            
+            saveComments() {
+                localStorage.setItem('korextv_comments', JSON.stringify(this.comments));
+            }
+        }
+
+        // نظام مشغل الفيديو
+        class VideoPlayer {
+            constructor() {
+                this.video = document.getElementById('main-video-player');
+                this.isPlaying = false;
+                this.currentPart = 1;
+                
+                this.setupEventListeners();
+            }
+            
+            setupEventListeners() {
+                this.video.addEventListener('play', () => {
+                    this.isPlaying = true;
+                    document.getElementById('play-btn').textContent = '⏸️';
+                });
+                
+                this.video.addEventListener('pause', () => {
+                    this.isPlaying = false;
+                    document.getElementById('play-btn').textContent = '▶️';
+                });
+                
+                this.video.addEventListener('ended', () => {
+                    this.handleVideoEnd();
+                });
+            }
+            
+            togglePlay() {
+                if (this.video.paused) {
+                    this.video.play();
+                } else {
+                    this.video.pause();
+                }
+            }
+            
+            skipBackward() {
+                this.video.currentTime = Math.max(0, this.video.currentTime - 10);
+            }
+            
+            skipForward() {
+                this.video.currentTime = Math.min(this.video.duration, this.video.currentTime + 10);
+            }
+            
+            changeQuality(quality) {
+                // في production، سيغير مصدر الفيديو
+                console.log('جودة متغيرة:', quality);
+            }
+            
+            toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    this.video.requestFullscreen().catch(err => {
+                        console.log('خطأ في وضع ملء الشاشة:', err);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+            
+            playVideoPart(partNumber) {
+                this.currentPart = partNumber;
+                const startTime = (partNumber - 1) * 900; // 15 دقيقة
+                
+                this.video.currentTime = startTime;
+                this.video.play();
+                
+                // تحديد الزر النشط
+                document.querySelectorAll('.part-btn').forEach((btn, index) => {
+                    btn.classList.toggle('active', index + 1 === partNumber);
+                });
+            }
+            
+            handleVideoEnd() {
+                if (this.currentPart < 3) {
+                    if (confirm('هل تريد متابعة الجزء التالي؟')) {
+                        this.playVideoPart(this.currentPart + 1);
+                    }
+                } else {
+                    alert('🎉 مبروك! لقد أنهيت الحلقة!');
+                }
+            }
+        }
+
+        // إنشاء التطبيق
+        const app = new KorexTVApp();
+        const videoPlayer = new VideoPlayer();
+
+        // دوال الواجهة
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            const navMap = {
+                'home-page': 0,
+                'video-page': 1,
+                'profile-page': 2
+            };
+            
+            document.querySelectorAll('.nav-item').forEach((item, index) => {
+                item.classList.toggle('active', index === navMap[pageId]);
+            });
+        }
+
+        function toggleNotifications() {
+            alert('🔔 نظام الإشعارات قيد التطوير');
+        }
+    </script>
+</body>
+</html>
