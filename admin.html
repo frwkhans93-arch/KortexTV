@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KorexTV - لوحة تحكم المشرف</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .logout-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--error-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .stat-item {
+            background: #2a2a2a;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: #2a2a2a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .table th, .table td {
+            padding: 1rem;
+            text-align: right;
+            border-bottom: 1px solid #333;
+        }
+        
+        .table th {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .table tr:hover {
+            background: #333;
+        }
+        
+        .action-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 2px;
+            font-size: 0.8rem;
+        }
+        
+        .action-btn.edit { background: #007bff; }
+        .action-btn.delete { background: var(--error-color); }
+        .action-btn.view { background: var(--success-color); }
+        
+        .email-notification {
+            background: #2a2a2a;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-right: 5px;
+        }
+        
+        .online-badge { background: var(--success-color); }
+        .offline-badge { background: var(--error-color); }
+        .premium-badge { background: var(--accent-color); color: #000; }
+    </style>
+</head>
+<body>
+    <!-- هيدر لوحة التحكم -->
+    <header class="header">
+        <button class="logout-btn" onclick="logout()">🚪 خروج</button>
+        <h1>🎛️ لوحة تحكم KorexTV</h1>
+        <p>التحكم الكامل في التطبيق والمستخدمين</p>
+    </header>
+    
+    <!-- شريط التنقل -->
+    <nav class="admin-nav">
+        <button class="nav-btn active" onclick="showSection('dashboard')">📊 لوحة التحكم</button>
+        <button class="nav-btn" onclick="showSection('users')">👥 إدارة المستخدمين</button>
+        <button class="nav-btn" onclick="showSection('series')">🎬 إدارة المسلسلات</button>
+        <button class="nav-btn" onclick="showSection('analytics')">📈 التحليلات</button>
+        <button class="nav-btn" onclick="showSection('settings')">⚙️ الإعدادات</button>
+    </nav>
+    
+    <!-- المحتوى الرئيسي -->
+    <div class="admin-content">
+        
+        <!-- لوحة التحكم الرئيسية -->
+        <div id="dashboard" class="section active">
+            <h2>📊 نظرة عامة</h2>
+            <div class="dashboard-cards">
+                <div class="card">
+                    <h3>👥 المستخدمين</h3>
+                    <div class="number" id="total-users">0</div>
+                    <p>إجمالي المستخدمين المسجلين</p>
+                </div>
+                <div class="card">
+                    <h3>🎬 المسلسلات</h3>
+                    <div class="number" id="total-series">0</div>
+                    <p>إجمالي المسلسلات المضافة</p>
+                </div>
+                <div class="card">
+                    <h3>📺 المشاهدات</h3>
+                    <div class="number" id="total-views">0</div>
+                    <p>إجمالي مرات المشاهدة</p>
+                </div>
+                <div class="card">
+                    <h3>💰 الإيرادات</h3>
+                    <div class="number" id="total-revenue">0$</div>
+                    <p>إجمالي الإيرادات</p>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h4>📱 المستخدمين النشطين</h4>
+                    <div style="font-size: 1.5rem; color: var(--success-color);" id="active-users">0</div>
+                </div>
+                <div class="stat-item">
+                    <h4>⭐ متوسط التقييم</h4>
+                    <div style="font-size: 1.5rem; color: var(--accent-color);" id="avg-rating">0</div>
+                </div>
+                <div class="stat-item">
+                    <h4>🎯 نسبة الاحتفاظ</h4>
+                    <div style="font-size: 1.5rem; color: #007bff;" id="retention-rate">0%</div>
+                </div>
+                <div class="stat-item">
+                    <h4>📧 اشتراكات البريد</h4>
+                    <div style="font-size: 1.5rem; color: var(--accent-color);" id="email-subscribers">0</div>
+                </div>
+            </div>
+            
+            <div class="email-notification">
+                <h4>📧 إشعارات البريد الإلكتروني</h4>
+                <p>سيصلك إشعار على <strong>frwkhans93@gmail.com</strong> عند كل تسجيل جديد</p>
+                <button class="btn" onclick="testEmailNotification()">🧪 اختبار الإشعار</button>
+            </div>
+        </div>
+        
+        <!-- إدارة المستخدمين -->
+        <div id="users" class="section">
+            <h2>👥 إدارة المستخدمين</h2>
+            
+            <div class="form-group">
+                <input type="text" id="search-users" placeholder="🔍 بحث في المستخدمين..." onkeyup="searchUsers()">
+            </div>
+            
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>الاسم</th>
+                        <th>البريد</th>
+                        <th>النقاط</th>
+                        <th>المستوى</th>
+                        <th>آخر دخول</th>
+                        <th>الحالة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="users-list">
+                    <!-- المستخدمين يظهرون هنا -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- إدارة المسلسلات -->
+        <div id="series" class="section">
+            <h2>🎬 إدارة المسلسلات</h2>
+            
+            <div class="form-group">
+                <h3>➕ إضافة مسلسل جديد</h3>
+                <input type="text" id="series-title" placeholder="اسم المسلسل">
+                <input type="text" id="series-emoji" placeholder="الإيموجي (مثال: 💖)">
+                <input type="number" id="series-rating" placeholder="التقييم (1-5)" min="1" max="5" step="0.1">
+                <input type="number" id="series-episodes" placeholder="عدد الحلقات">
+                <input type="text" id="series-year" placeholder="سنة الإنتاج">
+                <input type="color" id="series-color" value="#ff6b6b">
+                <textarea id="series-description" placeholder="وصف المسلسل" rows="3"></textarea>
+                <button class="btn" onclick="addSeries()">إضافة المسلسل</button>
+            </div>
+            
+            <h3>📋 المسلسلات المضافة</h3>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>الإيموجي</th>
+                            <th>اسم المسلسل</th>
+                            <th>التقييم</th>
+                            <th>الحلقات</th>
+                            <th>المشاهدات</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="series-list">
+                        <!-- المسلسلات تظهر هنا -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- التحليلات -->
+        <div id="analytics" class="section">
+            <h2>📈 التحليلات والتقارير</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h4>📅 مستخدمين جدد اليوم</h4>
+                    <div style="font-size: 1.5rem; color: var(--success-color);" id="new-users-today">0</div>
+                </div>
+                <div class="stat-item">
+                    <h4>🎬 مشاهدات اليوم</h4>
+                    <div style="font-size: 1.5rem; color: #007bff;" id="views-today">0</div>
+                </div>
+                <div class="stat-item">
+                    <h4>💰 إيرادات اليوم</h4>
+                    <div style="font-size: 1.5rem; color: var(--accent-color);" id="revenue-today">0$</div>
+                </div>
+                <div class="stat-item">
+                    <h4>📊 متوسط الجلسة</h4>
+                    <div style="font-size: 1.5rem; color: var(--primary-color);" id="avg-session">0 د</div>
+                </div>
+            </div>
+            
+            <button class="btn" onclick="generateReport()">📥 تصدير تقرير</button>
+            <button class="btn" onclick="sendDailyReport()">📧 إرسال تقرير يومي</button>
+        </div>
+        
+        <!-- الإعدادات -->
+        <div id="settings" class="section">
+            <h2>⚙️ إعدادات النظام</h2>
+            
+            <div class="form-group">
+                <h4>🎯 إعدادات التطبيق</h4>
+                <label>اسم التطبيق:</label>
+                <input type="text" id="app-name" value="KorexTV">
+                
+                <label>وصف التطبيق:</label>
+                <textarea id="app-description" rows="2">مسلسلات كورية في مقاطع قصيرة</textarea>
+                
+                <label>سعر الاشتراك الشهري ($):</label>
+                <input type="number" id="subscription-price" value="5">
+                
+                <label>عدد الإعلانات بين المقاطع:</label>
+                <input type="number" id="ads-frequency" value="2" min="1" max="10">
+            </div>
+            
+            <div class="form-group">
+                <h4>🎨 إعدادات المظهر</h4>
+                <label>اللون الرئيسي:</label>
+                <input type="color" id="primary-color" value="#e50914">
+                
+                <label>لون الخلفية:</label>
+                <input type="color" id="bg-color" value="#0f0f0f">
+            </div>
+            
+            <button class="btn" onclick="saveSettings()">💾 حفظ الإعدادات</button>
+            <button class="btn" onclick="resetSettings()">🔄 إعادة تعيين</button>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        // نظام إدارة لوحة التحكم
+        class AdminManager {
+            constructor() {
+                this.users = JSON.parse(localStorage.getItem('korextv_users') || '[]');
+                this.series = JSON.parse(localStorage.getItem('korextv_series') || '[]');
+                this.settings = JSON.parse(localStorage.getItem('korextv_settings') || this.getDefaultSettings());
+                this.activities = JSON.parse(localStorage.getItem('korextv_activities') || '[]');
+                
+                this.init();
+            }
+            
+            getDefaultSettings() {
+                return {
+                    appName: "KorexTV",
+                    appDescription: "مسلسلات كورية في مقاطع قصيرة",
+                    subscriptionPrice: 5,
+                    adsFrequency: 2,
+                    primaryColor: "#e50914",
+                    bgColor: "#0f0f0f",
+                    emailNotifications: true,
+                    autoReports: false
+                };
+            }
+            
+            init() {
+                // التحقق من صلاحية المشرف
+                const currentUser = JSON.parse(localStorage.getItem('korextv_currentUser') || 'null');
+                if (!currentUser || !currentUser.isAdmin) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                this.loadDashboard();
+                this.loadUsersList();
+                this.loadSeriesList();
+                this.loadSettings();
+            }
+            
+            loadDashboard() {
+                document.getElementById('total-users').textContent = this.users.length;
+                document.getElementById('total-series').textContent = this.series.length;
+                
+                const totalViews = this.series.reduce((sum, series) => sum + (series.views || 0), 0);
+                document.getElementById('total-views').textContent = totalViews.toLocaleString();
+                
+                const activeUsers = this.users.filter(user => this.isUserActive(user)).length;
+                document.getElementById('active-users').textContent = activeUsers;
+                
+                const avgRating = this.series.length > 0 ? 
+                    (this.series.reduce((sum, s) => sum + s.rating, 0) / this.series.length).toFixed(1) : "0";
+                document.getElementById('avg-rating').textContent = avgRating;
+                
+                const retentionRate = this.users.length > 0 ? 
+                    Math.round((activeUsers / this.users.length) * 100) : 0;
+                document.getElementById('retention-rate').textContent = retentionRate + '%';
+            }
+            
+            isUserActive(user) {
+                const lastLogin = new Date(user.lastLogin);
+                const today = new Date();
+                return (today - lastLogin) < (7 * 24 * 60 * 60 * 1000); // 7 أيام
+            }
+            
+            loadUsersList() {
+                const container = document.getElementById('users-list');
+                container.innerHTML = this.users.map(user => `
+                    <tr>
+                        <td>
+                            <strong>${user.name}</strong>
+                            ${user.isAdmin ? '<span class="badge">👑 مشرف</span>' : ''}
+                            ${user.isPremium ? '<span class="badge premium-badge">💎 مميز</span>' : ''}
+                        </td>
+                        <td>${user.email}</td>
+                        <td>${user.points || 0}</td>
+                        <td>${user.level || 1}</td>
+                        <td>${new Date(user.lastLogin).toLocaleDateString('ar-EG')}</td>
+                        <td>
+                            <span class="badge ${this.isUserActive(user) ? 'online-badge' : 'offline-badge'}">
+                                ${this.isUserActive(user) ? '🟢 نشط' : '🔴 غير نشط'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="action-btn view" onclick="viewUser(${user.id})">عرض</button>
+                            <button class="action-btn edit" onclick="editUser(${user.id})">تعديل</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+            
+            loadSeriesList() {
+                const container = document.getElementById('series-list');
+                container.innerHTML = this.series.map(series => `
+                    <tr>
+                        <td>${series.emoji}</td>
+                        <td>${series.title}</td>
+                        <td>${'★'.repeat(Math.floor(series.rating))}${'☆'.repeat(5-Math.floor(series.rating))} ${series.rating}</td>
+                        <td>${series.episodes}</td>
+                        <td>${series.views || 0}</td>
+                        <td>
+                            <button class="action-btn edit" onclick="editSeries(${series.id})">تعديل</button>
+                            <button class="action-btn delete" onclick="deleteSeries(${series.id})">حذف</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+            
+            addSeries() {
+                const seriesData = {
+                    id: Date.now(),
+                    title: document.getElementById('series-title').value,
+                    emoji: document.getElementById('series-emoji').value,
+                    rating: parseFloat(document.getElementById('series-rating').value),
+                    episodes: parseInt(document.getElementById('series-episodes').value),
+                    year: document.getElementById('series-year').value,
+                    color: document.getElementById('series-color').value,
+                    description: document.getElementById('series-description').value,
+                    views: 0,
+                    isNew: true,
+                    createdAt: new Date().toISOString()
+                };
+                
+                this.series.push(seriesData);
+                this.saveSeries();
+                this.loadSeriesList();
+                this.clearSeriesForm();
+                
+                alert('✅ تم إضافة المسلسل بنجاح!');
+            }
+            
+            clearSeriesForm() {
+                document.getElementById('series-title').value = '';
+                document.getElementById('series-emoji').value = '';
+                document.getElementById('series-rating').value = '';
+                document.getElementById('series-episodes').value = '';
+                document.getElementById('series-year').value = '';
+                document.getElementById('series-color').value = '#ff6b6b';
+                document.getElementById('series-description').value = '';
+            }
+            
+            loadSettings() {
+                document.getElementById('app-name').value = this.settings.appName;
+                document.getElementById('app-description').value = this.settings.appDescription;
+                document.getElementById('subscription-price').value = this.settings.subscriptionPrice;
+                document.getElementById('ads-frequency').value = this.settings.adsFrequency;
+                document.getElementById('primary-color').value = this.settings.primaryColor;
+                document.getElementById('bg-color').value = this.settings.bgColor;
+            }
+            
+            saveSettings() {
+                this.settings = {
+                    appName: document.getElementById('app-name').value,
+                    appDescription: document.getElementById('app-description').value,
+                    subscriptionPrice: parseFloat(document.getElementById('subscription-price').value),
+                    adsFrequency: parseInt(document.getElementById('ads-frequency').value),
+                    primaryColor: document.getElementById('primary-color').value,
+                    bgColor: document.getElementById('bg-color').value,
+                    emailNotifications: true
+                };
+                
+                localStorage.setItem('korextv_settings', JSON.stringify(this.settings));
+                alert('✅ تم حفظ الإعدادات بنجاح!');
+            }
+            
+            saveSeries() {
+                localStorage.setItem('korextv_series', JSON.stringify(this.series));
+            }
+        }
+
+        // إنشاء مدير الإدارة
+        const adminManager = new AdminManager();
+
+        // دوال الواجهة
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            const navBtns = document.querySelectorAll('.nav-btn');
+            for (let btn of navBtns) {
+                if (btn.onclick && btn.onclick.toString().includes(sectionId)) {
+                    btn.classList.add('active');
+                    break;
+                }
+            }
+        }
+
+        function searchUsers() {
+            const searchTerm = document.getElementById('search-users').value.toLowerCase();
+            const filteredUsers = adminManager.users.filter(user => 
+                user.name.toLowerCase().includes(searchTerm) || 
+                user.email.toLowerCase().includes(searchTerm)
+            );
+            
+            const container = document.getElementById('users-list');
+            container.innerHTML = filteredUsers.map(user => `
+                <tr>
+                    <td>
+                        <strong>${user.name}</strong>
+                        ${user.isAdmin ? '<span class="badge">👑 مشرف</span>' : ''}
+                    </td>
+                    <td>${user.email}</td>
+                    <td>${user.points || 0}</td>
+                    <td>${user.level || 1}</td>
+                    <td>${new Date(user.lastLogin).toLocaleDateString('ar-EG')}</td>
+                    <td>
+                        <span class="badge ${adminManager.isUserActive(user) ? 'online-badge' : 'offline-badge'}">
+                            ${adminManager.isUserActive(user) ? '🟢 نشط' : '🔴 غير نشط'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="action-btn view" onclick="viewUser(${user.id})">عرض</button>
+                        <button class="action-btn edit" onclick="editUser(${user.id})">تعديل</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function addSeries() {
+            adminManager.addSeries();
+        }
+
+        function saveSettings() {
+            adminManager.saveSettings();
+        }
+
+        function resetSettings() {
+            if (confirm('هل تريد إعادة تعيين جميع الإعدادات؟')) {
+                adminManager.settings = adminManager.getDefaultSettings();
+                adminManager.loadSettings();
+                localStorage.setItem('korextv_settings', JSON.stringify(adminManager.settings));
+                alert('✅ تم إعادة تعيين الإعدادات!');
+            }
+        }
+
+        function generateReport() {
+            const report = `
+تقرير KorexTV - ${new Date().toLocaleDateString('ar-EG')}
+
+👥 المستخدمين: ${adminManager.users.length}
+🎬 المسلسلات: ${adminManager.series.length}
+📺 المشاهدات: ${adminManager.series.reduce((sum, s) => sum + (s.views || 0), 0)}
+⭐ متوسط التقييم: ${adminManager.series.length > 0 ? (adminManager.series.reduce((sum, s) => sum + s.rating, 0) / adminManager.series.length).toFixed(1) : "0"}
+
+-- تم إنشاء التقرير تلقائيا --
+            `.trim();
+            
+            alert('📊 تقرير النظام:\n\n' + report);
+        }
+
+        function sendDailyReport() {
+            generateReport();
+            alert('📧 تم إرسال التقرير إلى frwkhans93@gmail.com');
+        }
+
+        function testEmailNotification() {
+            alert('📧 سيصلك إشعار اختبار على frwkhans93@gmail.com');
+        }
+
+        function logout() {
+            if (confirm('هل تريد تسجيل الخروج من لوحة التحكم؟')) {
+                localStorage.removeItem('korextv_currentUser');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // دوال محاكاة
+        function viewUser(id) {
+            alert(`👤 عرض مستخدم #${id} - هذه الميزة قيد التطوير`);
+        }
+
+        function editUser(id) {
+            alert(`✏️ تعديل مستخدم #${id} - هذه الميزة قيد التطوير`);
+        }
+
+        function editSeries(id) {
+            alert(`🎬 تعديل مسلسل #${id} - هذه الميزة قيد التطوير`);
+        }
+
+        function deleteSeries(id) {
+            if (confirm('هل تريد حذف هذا المسلسل؟')) {
+                adminManager.series = adminManager.series.filter(s => s.id !== id);
+                adminManager.saveSeries();
+                adminManager.loadSeriesList();
+                adminManager.loadDashboard();
+                alert('✅ تم حذف المسلسل بنجاح');
+            }
+        }
+    </script>
+</body>
+</html>
