@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KorexTV - تسجيل الدخول</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .language-selector {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .language-selector select {
+            background: transparent;
+            color: white;
+            border: none;
+            outline: none;
+            cursor: pointer;
+        }
+        
+        .forgot-password {
+            margin-top: 1rem;
+            text-align: center;
+        }
+        
+        .password-strength {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            text-align: right;
+            transition: all 0.3s;
+        }
+        
+        .strength-weak { color: #ff6b6b; }
+        .strength-medium { color: #ffa500; }
+        .strength-strong { color: #28a745; }
+    </style>
+</head>
+<body>
+    <div class="language-selector">
+        <select id="language-select" onchange="changeLanguage(this.value)">
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="fr">🇫🇷 Français</option>
+        </select>
+    </div>
+
+    <div class="login-container">
+        <div class="admin-badge">👑 المشرفين</div>
+        <div class="logo">🎬</div>
+        <h1 data-translate="app.name">KorexTV</h1>
+        <p class="subtitle" data-translate="app.slogan">مسلسلات كورية في مقاطع قصيرة</p>
+        
+        <!-- نموذج تسجيل الدخول -->
+        <div id="login-form">
+            <div class="form-group">
+                <input type="email" id="login-email" placeholder="📧 البريد الإلكتروني" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="login-password" placeholder="🔒 كلمة المرور" required>
+            </div>
+            <button onclick="login()" data-translate="auth.login">🎯 تسجيل الدخول</button>
+            
+            <div class="forgot-password">
+                <span class="switch-btn" onclick="showForgotPassword()" data-translate="auth.forgot_password">🔑 نسيت كلمة المرور؟</span>
+            </div>
+            
+            <div class="switch-form">
+                <span data-translate="auth.no_account">ليس لديك حساب؟</span>
+                <span class="switch-btn" onclick="showRegister()" data-translate="auth.register">سجل الآن</span>
+            </div>
+        </div>
+        
+        <!-- نموذج التسجيل -->
+        <div id="register-form" style="display: none;">
+            <div class="form-group">
+                <input type="text" id="register-name" placeholder="👤 الاسم الكامل" required>
+            </div>
+            <div class="form-group">
+                <input type="email" id="register-email" placeholder="📧 البريد الإلكتروني" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="register-password" placeholder="🔒 كلمة المرور" required 
+                       onkeyup="checkPasswordStrength(this.value)">
+                <div class="password-strength" id="register-strength"></div>
+            </div>
+            <div class="form-group">
+                <input type="password" id="register-confirm" placeholder="✅ تأكيد كلمة المرور" required>
+            </div>
+            <button onclick="register()" data-translate="auth.create_account">🚀 إنشاء حساب</button>
+            <div class="switch-form">
+                <span data-translate="auth.have_account">لديك حساب؟</span>
+                <span class="switch-btn" onclick="showLogin()" data-translate="auth.login">سجل الدخول</span>
+            </div>
+        </div>
+        
+        <!-- استعادة كلمة المرور -->
+        <div id="forgot-password-form" style="display: none;">
+            <div class="form-group">
+                <input type="email" id="forgot-email" placeholder="📧 أدخل بريدك الإلكتروني" required>
+            </div>
+            <button onclick="sendResetEmail()">🔄 إرسال رابط الاستعادة</button>
+            <div class="switch-form">
+                <span class="switch-btn" onclick="showLogin()">← العودة لتسجيل الدخول</span>
+            </div>
+        </div>
+
+        <div class="error-message" id="error-message"></div>
+        
+        <div class="admin-info">
+            💡 للمشرفين: استخدم بريدك الخاص للوصول إلى لوحة التحكم
+        </div>
+        
+        <div class="features">
+            <div class="feature">🎬 مقاطع 2-3 دقائق</div>
+            <div class="feature">⭐ تقييمات حقيقية</div>
+            <div class="feature">💝 نظام المفضلة</div>
+            <div class="feature">📱 متوافق مع جميع الأجهزة</div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // نظام إدارة المستخدمين المتكامل
+        class UserManager {
+            constructor() {
+                this.users = JSON.parse(localStorage.getItem('korextv_users') || '[]');
+                this.currentUser = JSON.parse(localStorage.getItem('korextv_currentUser') || 'null');
+                this.settings = JSON.parse(localStorage.getItem('korextv_settings') || this.getDefaultSettings());
+                
+                this.adminEmails = ['frwkhans93@gmail.com', 'admin@korextv.com'];
+                
+                if (this.currentUser) {
+                    this.redirectBasedOnRole(this.currentUser.email);
+                }
+                
+                this.initializeDefaultUsers();
+            }
+
+            getDefaultSettings() {
+                return {
+                    appName: "KorexTV",
+                    appDescription: "مسلسلات كورية في مقاطع قصيرة",
+                    subscriptionPrice: 5,
+                    adsFrequency: 2,
+                    primaryColor: "#e50914",
+                    bgColor: "#0f0f0f",
+                    autoLogin: true,
+                    notifications: true,
+                    language: "ar"
+                };
+            }
+
+            initializeDefaultUsers() {
+                if (this.users.length === 0) {
+                    const adminUser = {
+                        id: 1,
+                        name: "مدير KorexTV",
+                        email: "frwkhans93@gmail.com",
+                        password: this.hashPassword("KorexTV@2024$Admin!Secure"),
+                        points: 1000,
+                        level: 10,
+                        joinedAt: new Date().toISOString(),
+                        favorites: [],
+                        watchHistory: [],
+                        isPremium: true,
+                        lastLogin: new Date().toISOString(),
+                        isAdmin: true,
+                        role: "super_admin"
+                    };
+                    
+                    const testUser = {
+                        id: 2,
+                        name: "مستخدم تجريبي",
+                        email: "test@korextv.com",
+                        password: this.hashPassword("Test123!"),
+                        points: 100,
+                        level: 1,
+                        joinedAt: new Date().toISOString(),
+                        favorites: [],
+                        watchHistory: [],
+                        isPremium: false,
+                        lastLogin: new Date().toISOString(),
+                        isAdmin: false,
+                        role: "user"
+                    };
+                    
+                    this.users.push(adminUser, testUser);
+                    this.save();
+                }
+            }
+
+            hashPassword(password) {
+                return btoa(password + "KorexTVSalt2024");
+            }
+
+            verifyPassword(password, hashedPassword) {
+                return this.hashPassword(password) === hashedPassword;
+            }
+
+            register(name, email, password) {
+                if (!name || !email || !password) {
+                    throw new Error('جميع الحقول مطلوبة');
+                }
+
+                if (!this.isValidEmail(email)) {
+                    throw new Error('البريد الإلكتروني غير صالح');
+                }
+
+                if (password.length < 6) {
+                    throw new Error('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+                }
+
+                if (!this.isStrongPassword(password)) {
+                    throw new Error('كلمة المرور ضعيفة. يجب أن تحتوي على أحرف كبيرة وصغيرة وأرقام');
+                }
+
+                if (this.users.find(user => user.email === email)) {
+                    throw new Error('البريد الإلكتروني مستخدم بالفعل');
+                }
+
+                const user = {
+                    id: Date.now(),
+                    name,
+                    email,
+                    password: this.hashPassword(password),
+                    points: 100,
+                    level: 1,
+                    joinedAt: new Date().toISOString(),
+                    favorites: [],
+                    watchHistory: [],
+                    isPremium: false,
+                    lastLogin: new Date().toISOString(),
+                    isAdmin: this.isAdminEmail(email),
+                    role: this.isAdminEmail(email) ? "admin" : "user",
+                    settings: {
+                        notifications: true,
+                        autoPlay: true,
+                        videoQuality: "auto",
+                        language: "ar"
+                    }
+                };
+
+                this.users.push(user);
+                this.save();
+                this.logActivity('user_registered', { email, name });
+                
+                return user;
+            }
+
+            login(email, password) {
+                const user = this.users.find(u => u.email === email && this.verifyPassword(password, u.password));
+                if (!user) {
+                    this.logActivity('login_failed', { email, reason: 'invalid_credentials' });
+                    throw new Error('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+                }
+                
+                user.lastLogin = new Date().toISOString();
+                user.loginCount = (user.loginCount || 0) + 1;
+                this.currentUser = user;
+                this.save();
+                
+                this.logActivity('login_success', { email, name: user.name });
+                
+                return user;
+            }
+
+            isAdminEmail(email) {
+                return this.adminEmails.includes(email);
+            }
+
+            redirectBasedOnRole(email) {
+                if (this.isAdminEmail(email)) {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'index.html';
+                }
+            }
+
+            isStrongPassword(password) {
+                const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
+                return strongRegex.test(password);
+            }
+
+            isValidEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+
+            saveResetCode(email, code) {
+                const resetCodes = JSON.parse(localStorage.getItem('korextv_resetCodes') || '{}');
+                resetCodes[email] = {
+                    code: code,
+                    expires: Date.now() + (30 * 60 * 1000)
+                };
+                localStorage.setItem('korextv_resetCodes', JSON.stringify(resetCodes));
+                this.logActivity('password_reset_requested', { email });
+            }
+
+            resetUserPassword(email, newPassword) {
+                const user = this.users.find(u => u.email === email);
+                if (user) {
+                    user.password = this.hashPassword(newPassword);
+                    this.save();
+                    this.logActivity('password_reset_success', { email });
+                    return true;
+                }
+                return false;
+            }
+
+            logActivity(type, data) {
+                const activities = JSON.parse(localStorage.getItem('korextv_activities') || '[]');
+                activities.push({
+                    type,
+                    data,
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent
+                });
+                
+                if (activities.length > 500) activities.shift();
+                localStorage.setItem('korextv_activities', JSON.stringify(activities));
+            }
+
+            logout() {
+                if (this.currentUser) {
+                    this.logActivity('logout', { email: this.currentUser.email });
+                }
+                this.currentUser = null;
+                localStorage.removeItem('korextv_currentUser');
+            }
+
+            save() {
+                localStorage.setItem('korextv_users', JSON.stringify(this.users));
+                localStorage.setItem('korextv_settings', JSON.stringify(this.settings));
+                if (this.currentUser) {
+                    localStorage.setItem('korextv_currentUser', JSON.stringify(this.currentUser));
+                }
+            }
+
+            isLoggedIn() {
+                return this.currentUser !== null;
+            }
+        }
+
+        const userManager = new UserManager();
+
+        // دوال الواجهة
+        function showRegister() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'block';
+            document.getElementById('forgot-password-form').style.display = 'none';
+            document.getElementById('error-message').style.display = 'none';
+        }
+
+        function showLogin() {
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('forgot-password-form').style.display = 'none';
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('error-message').style.display = 'none';
+        }
+
+        function showForgotPassword() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('forgot-password-form').style.display = 'block';
+            document.getElementById('error-message').style.display = 'none';
+        }
+
+        function checkPasswordStrength(password) {
+            const strengthElement = document.getElementById('register-strength');
+            let strength = 0;
+            let message = '';
+            let className = '';
+
+            if (password.length >= 8) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+            switch(strength) {
+                case 0: case 1: case 2:
+                    message = 'ضعيفة ❌'; className = 'strength-weak'; break;
+                case 3: case 4:
+                    message = 'متوسطة ⚠️'; className = 'strength-medium'; break;
+                case 5:
+                    message = 'قوية ✅'; className = 'strength-strong'; break;
+            }
+
+            strengthElement.textContent = message;
+            strengthElement.className = 'password-strength ' + className;
+        }
+
+        function register() {
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirm = document.getElementById('register-confirm').value;
+
+            if (password !== confirm) {
+                showError('⚠️ كلمات المرور غير متطابقة');
+                return;
+            }
+
+            try {
+                const user = userManager.register(name, email, password);
+                
+                if (user.isAdmin) {
+                    showSuccess('🎖️ تم إنشاء حساب مشرف! سيتم توجيهك إلى لوحة التحكم');
+                    setTimeout(() => window.location.href = 'admin.html', 2000);
+                } else {
+                    showSuccess('🎉 تم إنشاء الحساب بنجاح! تم منحك 100 نقطة ترحيبية');
+                    setTimeout(() => showLogin(), 2000);
+                }
+                
+                document.getElementById('register-name').value = '';
+                document.getElementById('register-email').value = '';
+                document.getElementById('register-password').value = '';
+                document.getElementById('register-confirm').value = '';
+                document.getElementById('register-strength').textContent = '';
+            } catch (error) {
+                showError('❌ ' + error.message);
+            }
+        }
+
+        function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                const user = userManager.login(email, password);
+                
+                if (user.isAdmin) {
+                    showSuccess('🎖️ تم التعرف عليك كمشرف! يتم توجيهك إلى لوحة التحكم');
+                    setTimeout(() => window.location.href = 'admin.html', 1500);
+                } else {
+                    showSuccess('🎬 تم تسجيل الدخول بنجاح! يتم توجيهك إلى التطبيق');
+                    setTimeout(() => window.location.href = 'index.html', 1500);
+                }
+            } catch (error) {
+                showError('❌ ' + error.message);
+            }
+        }
+
+        function sendResetEmail() {
+            const email = document.getElementById('forgot-email').value;
+            
+            if (!userManager.isValidEmail(email)) {
+                showError('❌ البريد الإلكتروني غير صالح');
+                return;
+            }
+
+            const user = userManager.users.find(u => u.email === email);
+            if (!user) {
+                showError('❌ لا يوجد حساب مرتبط بهذا البريد');
+                return;
+            }
+
+            const resetCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            userManager.saveResetCode(email, resetCode);
+            
+            showSuccess(`📧 تم إرسال رمز الاستعادة: ${resetCode}`);
+            
+            setTimeout(() => {
+                showLogin();
+                document.getElementById('forgot-email').value = '';
+            }, 3000);
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('error-message');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            errorElement.style.color = '#ff6b6b';
+        }
+
+        function showSuccess(message) {
+            const errorElement = document.getElementById('error-message');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            errorElement.style.color = '#28a745';
+        }
+
+        // إدخال بالإنتر
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                if (document.getElementById('login-form').style.display !== 'none') {
+                    login();
+                } else if (document.getElementById('register-form').style.display !== 'none') {
+                    register();
+                }
+            }
+        });
+
+        // نظام اللغات
+        function changeLanguage(lang) {
+            localStorage.setItem('korextv_language', lang);
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            applyTranslations(lang);
+        }
+
+        function applyTranslations(lang) {
+            // سيتم تطبيق الترجمات من app.js
+            if (window.translatePage) {
+                window.translatePage(lang);
+            }
+        }
+
+        // تحميل اللغة المحفوظة
+        window.addEventListener('load', function() {
+            const savedLang = localStorage.getItem('korextv_language') || 'ar';
+            document.getElementById('language-select').value = savedLang;
+            changeLanguage(savedLang);
+            
+            const savedEmail = localStorage.getItem('last_login_email');
+            if (savedEmail) {
+                document.getElementById('login-email').value = savedEmail;
+            }
+        });
+    </script>
+</body>
+</html>
