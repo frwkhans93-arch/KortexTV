@@ -6,6 +6,23 @@
     <title>KorexTV - تسجيل الدخول</title>
     <link rel="stylesheet" href="styles.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
         .language-selector {
             position: absolute;
             top: 20px;
@@ -14,6 +31,7 @@
             padding: 8px 15px;
             border-radius: 20px;
             backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
         }
         
         .language-selector select {
@@ -22,8 +40,129 @@
             border: none;
             outline: none;
             cursor: pointer;
+            font-size: 14px;
         }
         
+        .login-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .admin-badge {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .logo {
+            font-size: 4rem;
+            text-align: center;
+            margin-bottom: 10px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            background: linear-gradient(45deg, #e50914, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #ccc;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #e50914;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(229, 9, 20, 0.3);
+        }
+
+        input::placeholder {
+            color: #ccc;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #e50914, #ff4757);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(229, 9, 20, 0.4);
+        }
+
+        .switch-form {
+            text-align: center;
+            margin-top: 20px;
+            color: #ccc;
+        }
+
+        .switch-btn {
+            color: #e50914;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .switch-btn:hover {
+            color: #ff6b6b;
+            text-decoration: underline;
+        }
+
         .forgot-password {
             margin-top: 1rem;
             text-align: center;
@@ -34,11 +173,92 @@
             font-size: 0.8rem;
             text-align: right;
             transition: all 0.3s;
+            padding: 5px 10px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
         }
         
-        .strength-weak { color: #ff6b6b; }
-        .strength-medium { color: #ffa500; }
-        .strength-strong { color: #28a745; }
+        .strength-weak { 
+            color: #ff6b6b; 
+            background: rgba(255,107,107,0.1);
+        }
+        .strength-medium { 
+            color: #ffa500; 
+            background: rgba(255,165,0,0.1);
+        }
+        .strength-strong { 
+            color: #28a745; 
+            background: rgba(40,167,69,0.1);
+        }
+
+        .error-message {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid rgba(255, 107, 107, 0.5);
+            color: #ff6b6b;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .success-message {
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid rgba(40, 167, 69, 0.5);
+            color: #28a745;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .admin-info {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            color: #FFD700;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .feature {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+            
+            .logo {
+                font-size: 3rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -64,7 +284,7 @@
             <div class="form-group">
                 <input type="password" id="login-password" placeholder="🔒 كلمة المرور" required>
             </div>
-            <button onclick="login()" data-translate="auth.login">🎯 تسجيل الدخول</button>
+            <button onclick="loginUser()" data-translate="auth.login">🎯 تسجيل الدخول</button>
             
             <div class="forgot-password">
                 <span class="switch-btn" onclick="showForgotPassword()" data-translate="auth.forgot_password">🔑 نسيت كلمة المرور؟</span>
@@ -92,7 +312,7 @@
             <div class="form-group">
                 <input type="password" id="register-confirm" placeholder="✅ تأكيد كلمة المرور" required>
             </div>
-            <button onclick="register()" data-translate="auth.create_account">🚀 إنشاء حساب</button>
+            <button onclick="registerUser()" data-translate="auth.create_account">🚀 إنشاء حساب</button>
             <div class="switch-form">
                 <span data-translate="auth.have_account">لديك حساب؟</span>
                 <span class="switch-btn" onclick="showLogin()" data-translate="auth.login">سجل الدخول</span>
@@ -111,6 +331,7 @@
         </div>
 
         <div class="error-message" id="error-message"></div>
+        <div class="success-message" id="success-message"></div>
         
         <div class="admin-info">
             💡 للمشرفين: استخدم بريدك الخاص للوصول إلى لوحة التحكم
@@ -124,28 +345,36 @@
         </div>
     </div>
 
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-    
-    <script src="firebase-config.js"></script>
-    <script src="app.js"></script>
     <script>
-        // نظام إدارة المستخدمين المتكامل
+        // نظام إدارة المستخدمين المتكامل - الإصدار المحسّن
         class UserManager {
             constructor() {
-                this.users = JSON.parse(localStorage.getItem('korextv_users') || '[]');
-                this.currentUser = JSON.parse(localStorage.getItem('korextv_currentUser') || 'null');
-                this.settings = JSON.parse(localStorage.getItem('korextv_settings') || this.getDefaultSettings());
-                
+                console.log('✅ بدء تهيئة UserManager...');
+                this.initializeData();
                 this.adminEmails = ['frwkhans93@gmail.com', 'admin@korextv.com'];
                 
+                // تأخير التوجيه حتى اكتمال تحميل الصفحة
                 if (this.currentUser) {
-                    this.redirectBasedOnRole(this.currentUser.email);
+                    setTimeout(() => {
+                        this.redirectBasedOnRole(this.currentUser.email);
+                    }, 100);
                 }
                 
                 this.initializeDefaultUsers();
+                console.log('✅ تم تهيئة UserManager بنجاح');
+            }
+
+            initializeData() {
+                try {
+                    this.users = JSON.parse(localStorage.getItem('korextv_users') || '[]');
+                    this.currentUser = JSON.parse(localStorage.getItem('korextv_currentUser') || 'null');
+                    this.settings = JSON.parse(localStorage.getItem('korextv_settings') || JSON.stringify(this.getDefaultSettings()));
+                } catch (error) {
+                    console.error('❌ خطأ في تحميل البيانات:', error);
+                    this.users = [];
+                    this.currentUser = null;
+                    this.settings = this.getDefaultSettings();
+                }
             }
 
             getDefaultSettings() {
@@ -164,6 +393,7 @@
 
             initializeDefaultUsers() {
                 if (this.users.length === 0) {
+                    console.log('🔧 إنشاء المستخدمين الافتراضيين...');
                     const adminUser = {
                         id: 1,
                         name: "مدير KorexTV",
@@ -198,11 +428,12 @@
                     
                     this.users.push(adminUser, testUser);
                     this.save();
+                    console.log('✅ تم إنشاء المستخدمين الافتراضيين');
                 }
             }
 
             hashPassword(password) {
-                return btoa(password + "KorexTVSalt2024");
+                return btoa(unescape(encodeURIComponent(password + "KorexTVSalt2024")));
             }
 
             verifyPassword(password, hashedPassword) {
@@ -210,6 +441,8 @@
             }
 
             register(name, email, password) {
+                console.log('📝 محاولة تسجيل مستخدم جديد:', email);
+                
                 if (!name || !email || !password) {
                     throw new Error('جميع الحقول مطلوبة');
                 }
@@ -256,13 +489,21 @@
                 this.save();
                 this.logActivity('user_registered', { email, name });
                 
+                console.log('✅ تم تسجيل المستخدم بنجاح:', email);
                 return user;
             }
 
             login(email, password) {
-                const user = this.users.find(u => u.email === email && this.verifyPassword(password, u.password));
+                console.log('🔐 محاولة تسجيل الدخول:', email);
+                const user = this.users.find(u => u.email === email);
+                
                 if (!user) {
-                    this.logActivity('login_failed', { email, reason: 'invalid_credentials' });
+                    this.logActivity('login_failed', { email, reason: 'user_not_found' });
+                    throw new Error('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+                }
+
+                if (!this.verifyPassword(password, user.password)) {
+                    this.logActivity('login_failed', { email, reason: 'invalid_password' });
                     throw new Error('البريد الإلكتروني أو كلمة المرور غير صحيحة');
                 }
                 
@@ -272,6 +513,7 @@
                 this.save();
                 
                 this.logActivity('login_success', { email, name: user.name });
+                console.log('✅ تم تسجيل الدخول بنجاح:', email);
                 
                 return user;
             }
@@ -281,15 +523,24 @@
             }
 
             redirectBasedOnRole(email) {
-                if (this.isAdminEmail(email)) {
-                    window.location.href = 'admin.html';
-                } else {
-                    window.location.href = 'index.html';
+                try {
+                    console.log('🔄 توجيه المستخدم بناءً على الدور:', email);
+                    if (this.isAdminEmail(email)) {
+                        if (window.location.pathname.includes('login.html') || window.location.pathname.endsWith('/')) {
+                            window.location.href = 'admin.html';
+                        }
+                    } else {
+                        if (window.location.pathname.includes('login.html') || window.location.pathname.endsWith('/')) {
+                            window.location.href = 'index.html';
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ خطأ في التوجيه:', error);
                 }
             }
 
             isStrongPassword(password) {
-                const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
+                const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$/;
                 return strongRegex.test(password);
             }
 
@@ -299,13 +550,17 @@
             }
 
             saveResetCode(email, code) {
-                const resetCodes = JSON.parse(localStorage.getItem('korextv_resetCodes') || '{}');
-                resetCodes[email] = {
-                    code: code,
-                    expires: Date.now() + (30 * 60 * 1000)
-                };
-                localStorage.setItem('korextv_resetCodes', JSON.stringify(resetCodes));
-                this.logActivity('password_reset_requested', { email });
+                try {
+                    const resetCodes = JSON.parse(localStorage.getItem('korextv_resetCodes') || '{}');
+                    resetCodes[email] = {
+                        code: code,
+                        expires: Date.now() + (30 * 60 * 1000)
+                    };
+                    localStorage.setItem('korextv_resetCodes', JSON.stringify(resetCodes));
+                    this.logActivity('password_reset_requested', { email });
+                } catch (error) {
+                    console.error('❌ خطأ في حفظ رمز الاستعادة:', error);
+                }
             }
 
             resetUserPassword(email, newPassword) {
@@ -320,16 +575,20 @@
             }
 
             logActivity(type, data) {
-                const activities = JSON.parse(localStorage.getItem('korextv_activities') || '[]');
-                activities.push({
-                    type,
-                    data,
-                    timestamp: new Date().toISOString(),
-                    userAgent: navigator.userAgent
-                });
-                
-                if (activities.length > 500) activities.shift();
-                localStorage.setItem('korextv_activities', JSON.stringify(activities));
+                try {
+                    const activities = JSON.parse(localStorage.getItem('korextv_activities') || '[]');
+                    activities.push({
+                        type,
+                        data,
+                        timestamp: new Date().toISOString(),
+                        userAgent: navigator.userAgent
+                    });
+                    
+                    if (activities.length > 500) activities.shift();
+                    localStorage.setItem('korextv_activities', JSON.stringify(activities));
+                } catch (error) {
+                    console.error('❌ خطأ في تسجيل النشاط:', error);
+                }
             }
 
             logout() {
@@ -341,10 +600,14 @@
             }
 
             save() {
-                localStorage.setItem('korextv_users', JSON.stringify(this.users));
-                localStorage.setItem('korextv_settings', JSON.stringify(this.settings));
-                if (this.currentUser) {
-                    localStorage.setItem('korextv_currentUser', JSON.stringify(this.currentUser));
+                try {
+                    localStorage.setItem('korextv_users', JSON.stringify(this.users));
+                    localStorage.setItem('korextv_settings', JSON.stringify(this.settings));
+                    if (this.currentUser) {
+                        localStorage.setItem('korextv_currentUser', JSON.stringify(this.currentUser));
+                    }
+                } catch (error) {
+                    console.error('❌ خطأ في حفظ البيانات:', error);
                 }
             }
 
@@ -353,32 +616,54 @@
             }
         }
 
-        const userManager = new UserManager();
+        // تهيئة UserManager بعد تحميل الصفحة
+        let userManager;
 
-        // دوال الواجهة
+        function initializeApp() {
+            try {
+                userManager = new UserManager();
+                console.log('🚀 التطبيق جاهز للاستخدام');
+            } catch (error) {
+                console.error('❌ فشل في تهيئة التطبيق:', error);
+                showError('حدث خطأ في تحميل التطبيق. يرجى تحديث الصفحة.');
+            }
+        }
+
+        // دوال الواجهة المحسنة
         function showRegister() {
             document.getElementById('login-form').style.display = 'none';
             document.getElementById('register-form').style.display = 'block';
             document.getElementById('forgot-password-form').style.display = 'none';
-            document.getElementById('error-message').style.display = 'none';
+            hideMessages();
         }
 
         function showLogin() {
             document.getElementById('register-form').style.display = 'none';
             document.getElementById('forgot-password-form').style.display = 'none';
             document.getElementById('login-form').style.display = 'block';
-            document.getElementById('error-message').style.display = 'none';
+            hideMessages();
         }
 
         function showForgotPassword() {
             document.getElementById('login-form').style.display = 'none';
             document.getElementById('register-form').style.display = 'none';
             document.getElementById('forgot-password-form').style.display = 'block';
+            hideMessages();
+        }
+
+        function hideMessages() {
             document.getElementById('error-message').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
         }
 
         function checkPasswordStrength(password) {
             const strengthElement = document.getElementById('register-strength');
+            if (!password) {
+                strengthElement.textContent = '';
+                strengthElement.className = 'password-strength';
+                return;
+            }
+
             let strength = 0;
             let message = '';
             let className = '';
@@ -402,9 +687,14 @@
             strengthElement.className = 'password-strength ' + className;
         }
 
-        function register() {
-            const name = document.getElementById('register-name').value;
-            const email = document.getElementById('register-email').value;
+        function registerUser() {
+            if (!userManager) {
+                showError('❌ النظام غير جاهز. يرجى تحديث الصفحة.');
+                return;
+            }
+
+            const name = document.getElementById('register-name').value.trim();
+            const email = document.getElementById('register-email').value.trim();
             const password = document.getElementById('register-password').value;
             const confirm = document.getElementById('register-confirm').value;
 
@@ -418,12 +708,15 @@
                 
                 if (user.isAdmin) {
                     showSuccess('🎖️ تم إنشاء حساب مشرف! سيتم توجيهك إلى لوحة التحكم');
-                    setTimeout(() => window.location.href = 'admin.html', 2000);
+                    setTimeout(() => {
+                        userManager.redirectBasedOnRole(user.email);
+                    }, 2000);
                 } else {
                     showSuccess('🎉 تم إنشاء الحساب بنجاح! تم منحك 100 نقطة ترحيبية');
                     setTimeout(() => showLogin(), 2000);
                 }
                 
+                // مسح الحقول
                 document.getElementById('register-name').value = '';
                 document.getElementById('register-email').value = '';
                 document.getElementById('register-password').value = '';
@@ -434,27 +727,44 @@
             }
         }
 
-        function login() {
-            const email = document.getElementById('login-email').value;
+        function loginUser() {
+            if (!userManager) {
+                showError('❌ النظام غير جاهز. يرجى تحديث الصفحة.');
+                return;
+            }
+
+            const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value;
+
+            if (!email || !password) {
+                showError('❌ يرجى ملء جميع الحقول');
+                return;
+            }
 
             try {
                 const user = userManager.login(email, password);
+                localStorage.setItem('last_login_email', email);
                 
-                if (user.isAdmin) {
-                    showSuccess('🎖️ تم التعرف عليك كمشرف! يتم توجيهك إلى لوحة التحكم');
-                    setTimeout(() => window.location.href = 'admin.html', 1500);
-                } else {
-                    showSuccess('🎬 تم تسجيل الدخول بنجاح! يتم توجيهك إلى التطبيق');
-                    setTimeout(() => window.location.href = 'index.html', 1500);
-                }
+                showSuccess(user.isAdmin ? 
+                    '🎖️ تم التعرف عليك كمشرف! يتم توجيهك إلى لوحة التحكم' : 
+                    '🎬 تم تسجيل الدخول بنجاح! يتم توجيهك إلى التطبيق'
+                );
+                
+                setTimeout(() => {
+                    userManager.redirectBasedOnRole(user.email);
+                }, 1500);
             } catch (error) {
                 showError('❌ ' + error.message);
             }
         }
 
         function sendResetEmail() {
-            const email = document.getElementById('forgot-email').value;
+            if (!userManager) {
+                showError('❌ النظام غير جاهز. يرجى تحديث الصفحة.');
+                return;
+            }
+
+            const email = document.getElementById('forgot-email').value.trim();
             
             if (!userManager.isValidEmail(email)) {
                 showError('❌ البريد الإلكتروني غير صالح');
@@ -470,35 +780,41 @@
             const resetCode = Math.random().toString(36).substring(2, 8).toUpperCase();
             userManager.saveResetCode(email, resetCode);
             
-            showSuccess(`📧 تم إرسال رمز الاستعادة: ${resetCode}`);
+            showSuccess(`📧 تم إرسال رمز الاستعادة: ${resetCode} (هذا نموذج تجريبي)`);
             
             setTimeout(() => {
                 showLogin();
                 document.getElementById('forgot-email').value = '';
-            }, 3000);
+            }, 4000);
         }
 
         function showError(message) {
             const errorElement = document.getElementById('error-message');
+            const successElement = document.getElementById('success-message');
+            
+            successElement.style.display = 'none';
             errorElement.textContent = message;
             errorElement.style.display = 'block';
-            errorElement.style.color = '#ff6b6b';
         }
 
         function showSuccess(message) {
             const errorElement = document.getElementById('error-message');
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-            errorElement.style.color = '#28a745';
+            const successElement = document.getElementById('success-message');
+            
+            errorElement.style.display = 'none';
+            successElement.textContent = message;
+            successElement.style.display = 'block';
         }
 
         // إدخال بالإنتر
         document.addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
                 if (document.getElementById('login-form').style.display !== 'none') {
-                    login();
+                    loginUser();
                 } else if (document.getElementById('register-form').style.display !== 'none') {
-                    register();
+                    registerUser();
+                } else if (document.getElementById('forgot-password-form').style.display !== 'none') {
+                    sendResetEmail();
                 }
             }
         });
@@ -512,14 +828,14 @@
         }
 
         function applyTranslations(lang) {
-            // سيتم تطبيق الترجمات من app.js
-            if (window.translatePage) {
-                window.translatePage(lang);
-            }
+            // يمكن إضافة الترجمات هنا لاحقاً
+            console.log('🌐 تغيير اللغة إلى:', lang);
         }
 
-        // تحميل اللغة المحفوظة
+        // تحميل التطبيق بعد اكتمال الصفحة
         window.addEventListener('load', function() {
+            initializeApp();
+            
             const savedLang = localStorage.getItem('korextv_language') || 'ar';
             document.getElementById('language-select').value = savedLang;
             changeLanguage(savedLang);
